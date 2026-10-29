@@ -1,0 +1,84 @@
+### Step 1: Install Snort
+
+On Ubuntu, run:
+
+```bash
+sudo apt update
+sudo apt install snort -y
+```
+
+Check the installation:
+
+```bash
+snort -V
+```
+
+### Step 2: Identify the network interface
+
+```bash
+ip a
+```
+
+Identify the active interface, for example, `enp0s3`.
+
+### Step 3: Create a custom Snort rule
+
+Create a rules file:
+
+```bash
+sudo nano /etc/snort/local.rules
+```
+
+Add the following rules:
+
+```text
+alert icmp any any -> any any (msg:"ICMP Ping Detected"; sid:1000001; rev:1;)
+
+alert tcp any any -> any 80 (msg:"HTTP Traffic Detected"; sid:1000002; rev:1;)
+```
+
+The first rule detects ICMP ping packets, while the second detects TCP traffic directed to destination port 80.
+
+Save the file using `Ctrl+O`, press Enter, and exit with `Ctrl+X`.
+
+### Step 4: Test the rules
+
+Check whether Snort accepts the configuration and rules:
+
+```bash
+sudo snort -T -c /etc/snort/snort.conf
+```
+
+If the configuration test fails, check your Snort version and configuration path. Snort 3 uses different configuration and rule-loading options.
+
+### Step 5: Run Snort in IDS mode
+
+For a Snort 2 installation, execute:
+
+```bash
+sudo snort -A console -q \
+-c /etc/snort/snort.conf \
+-i enp0s3 \
+-R /etc/snort/local.rules
+```
+
+Replace `enp0s3` with your actual network interface.
+
+Keep Snort running in the terminal.
+
+### Step 6: Generate test traffic
+
+Open another terminal and run:
+
+```bash
+ping -c 4 127.0.0.1
+```
+
+For testing on the network, use the IP address of another machine you own or are authorized to test.
+
+Note: Traffic sent to `127.0.0.1` uses the loopback interface and may not be visible on `enp0s3`. For reliable testing, generate traffic on the interface Snort is monitoring.
+
+You can also generate HTTP traffic to a test server:
+
+```bash
+curl http://<authorized-test-server-ip>/```
